@@ -96,8 +96,3 @@ Barter System предоставляет следующие возможност
    ```bash
    python manage.py collectstatic
    ```
-
-## Лицензия
-
-Этот проект лицензируется под лицензией MIT. См. файл [LICENSE](LICENSE) для подробностей.
-
