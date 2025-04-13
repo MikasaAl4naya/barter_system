@@ -46,13 +46,6 @@ Barter System предоставляет следующие возможност
    .\.venv\Scripts\activate
    ```
 
-   Для macOS/Linux:
-
-   ```bash
-   python3 -m venv .venv
-   source .venv/bin/activate
-   ```
-
 3. **Установка зависимостей**:
 
    ```bash
