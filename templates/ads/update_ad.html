@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Редактирование объявления</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f7fc;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            width: 60%;
+            margin: 0 auto;
+            background: #fff;
+            padding: 30px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            margin-top: 50px;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+        input, textarea, select {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .back-link {
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Редактирование объявления</h1>
+        <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <!-- Скрытое поле для передачи pk -->
+            <input type="hidden" name="pk" value="{{ ad.pk }}">
+
+            <div>
+                <label for="id_title">Заголовок</label>
+                {{ form.title }}
+            </div>
+
+            <div>
+                <label for="id_description">Описание</label>
+                {{ form.description }}
+            </div>
+
+            <div>
+                <label for="id_image_url">Изображение</label>
+                {{ form.image_url }}
+            </div>
+
+            <div>
+                <label for="id_category">Категория</label>
+                {{ form.category }}
+            </div>
+
+            <div>
+                <label for="id_condition">Состояние</label>
+                {{ form.condition }}
+            </div>
+
+            <button type="submit">Сохранить изменения</button>
+        </form>
+
+        <a href="{% url 'ad_detail' pk=ad.pk %}" class="back-link">Вернуться к объявлению</a>
+    </div>
+</body>
+</html>

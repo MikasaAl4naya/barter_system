@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <h2>Ваши предложения</h2>
+    {% for proposal in proposals %}
+    <div class="proposal">
+        <div class="proposal-header">
+            <p><strong>От:</strong> {{ proposal.ad_sender.title }}</p>
+            <p><strong>Кому:</strong> {{ proposal.ad_receiver.title }}</p>
+        </div>
+        <div class="proposal-body">
+            <p><strong>Статус:</strong> {{ proposal.get_status_display }}</p>
+        </div>
+        {% if proposal.ad_receiver.user == user %}
+        <form method="post" action="{% url 'update_proposal' proposal.id %}">
+            {% csrf_token %}
+            <button type="submit" name="status" value="accepted" class="btn accept-btn">Принять</button>
+            <button type="submit" name="status" value="rejected" class="btn reject-btn">Отклонить</button>
+        </form>
+        {% endif %}
+    </div>
+    {% empty %}
+    <p>Нет предложений для отображения.</p>
+    {% endfor %}
+</div>
+{% endblock %}
+
+<style>
+    .proposal {
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+        background-color: #fafafa;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .proposal-header {
+        border-bottom: 2px solid #eee;
+        padding-bottom: 10px;
+        margin-bottom: 10px;
+    }
+
+    .proposal-header p {
+        margin: 5px 0;
+    }
+
+    .proposal-body {
+        margin-bottom: 10px;
+    }
+
+    .btn {
+        padding: 8px 16px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 14px;
+        margin-right: 10px;
+    }
+
+    .accept-btn {
+        background-color: #4CAF50;
+        color: white;
+    }
+
+    .accept-btn:hover {
+        background-color: #45a049;
+    }
+
+    .reject-btn {
+        background-color: #dc3545;
+        color: white;
+    }
+
+    .reject-btn:hover {
+        background-color: #c82333;
+    }
+</style>

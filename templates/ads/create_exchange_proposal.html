@@ -1,0 +1,111 @@
+<!-- templates/ads/create_exchange_proposal.html -->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Создать предложение обмена</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f7fc;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            width: 80%;
+            margin: 0 auto;
+            background: #fff;
+            padding: 30px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            margin-top: 50px;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            font-size: 16px;
+            color: #555;
+        }
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            font-size: 14px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .form-group textarea {
+            resize: vertical;
+        }
+        .form-group button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .form-group button:hover {
+            background-color: #0056b3;
+        }
+        .back-btn {
+            display: inline-block;
+            margin-top: 20px;
+            text-decoration: none;
+            color: #007bff;
+        }
+        .back-btn:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Создать предложение обмена</h1>
+
+        <form method="post" action="{% url 'create_exchange_proposal' %}">
+            {% csrf_token %}
+            <!-- Выбор объявления для обмена -->
+            <div class="form-group">
+                <label for="ad_sender">Объявление от</label>
+                <select id="ad_sender" name="ad_sender" required>
+                    {% for ad in user_ads %}
+                        <option value="{{ ad.id }}">{{ ad.title }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Выбор объявления для получения -->
+            <div class="form-group">
+                <label for="ad_receiver">Объявление для обмена</label>
+                <select id="ad_receiver" name="ad_receiver" required>
+                    {% for ad in available_ads %}
+                        <option value="{{ ad.id }}">{{ ad.title }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Комментарий -->
+            <div class="form-group">
+                <label for="comment">Комментарий</label>
+                <textarea id="comment" name="comment" rows="4" placeholder="Комментарий к предложению" required></textarea>
+            </div>
+
+            <div class="form-group">
+                <button type="submit">Отправить предложение</button>
+            </div>
+        </form>
+
+        <a href="{% url 'ad_list' %}" class="back-btn">Назад к списку объявлений</a>
+    </div>
+
+</body>
+</html>

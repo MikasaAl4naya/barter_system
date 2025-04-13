@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Бартерная система{% endblock %}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        nav {
+            margin-bottom: 20px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #ddd;
+            overflow: auto;
+        }
+        nav a {
+            margin-right: 15px;
+            text-decoration: none;
+            color: #007bff;
+        }
+        .auth-links {
+            float: right;
+        }
+        .user-menu {
+            float: right;
+        }
+        .logout-form {
+            display: inline;
+        }
+        .logout-btn {
+            background: none;
+            border: none;
+            color: #007bff;
+            cursor: pointer;
+            padding: 0;
+            font: inherit;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+    </style>
+</head>
+<body>
+    <nav>
+    <a href="{% url 'ad_list' %}">Главная</a>
+    {% if user.is_authenticated %}
+        <a href="{% url 'create_ad' %}">Создать объявление</a>
+        <a href="{% url 'proposals_list' %}">Мои предложения</a>  <!-- Новая ссылка -->
+        <div class="user-menu">
+            <span>Привет, {{ user.username }}!</span>
+            <form class="logout-form" action="{% url 'logout' %}" method="post">
+                {% csrf_token %}
+                <button type="submit" class="logout-btn">Выйти</button>
+            </form>
+        </div>
+    {% else %}
+        <div class="auth-links">
+            <a href="{% url 'login' %}">Вход</a>
+            <a href="{% url 'signup' %}">Регистрация</a>
+        </div>
+    {% endif %}
+    </nav>
+
+    <div class="container">
+        {% block content %}{% endblock %}
+    </div>
+</body>
+</html>

@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container">
+    <h1>Список объявлений</h1>
+
+    <!-- Фильтры и поиск -->
+    <div class="filters">
+        <form method="get">
+            <div class="filter-group">
+                <input type="text" name="search" placeholder="Поиск..." value="{{ request.GET.search }}">
+
+                <select name="category">
+                    <option value="">Все категории</option>
+                    {% for cat in categories %}
+                    <option value="{{ cat }}" {% if request.GET.category == cat %}selected{% endif %}>{{ cat }}</option>
+                    {% endfor %}
+                </select>
+
+                <select name="condition">
+                    <option value="">Любое состояние</option>
+                    {% for cond in conditions %}
+                    <option value="{{ cond.0 }}" {% if request.GET.condition == cond.0 %}selected{% endif %}>{{ cond.1 }}</option>
+                    {% endfor %}
+                </select>
+
+                <button type="submit">Применить</button>
+                <a href="{% url 'ad_list' %}" class="reset">Сбросить</a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Список объявлений -->
+    {% for ad in page_obj %}
+    <div class="ad">
+        <h3>{{ ad.title }}</h3>
+        <p>{{ ad.description|truncatechars:100 }}</p>
+        <div class="meta">
+            <span>Категория: {{ ad.category }}</span>
+            <span>Состояние: {{ ad.get_condition_display }}</span>
+            <span>Дата: {{ ad.created_at|date:"d.m.Y" }}</span>
+        </div>
+        <div class="actions">
+            <a href="{% url 'ad_detail' pk=ad.pk %}" class="btn">Подробнее</a>
+            {% if user == ad.user %}
+            <a href="{% url 'update_ad' pk=ad.pk %}" class="btn">Редактировать</a>
+            <form action="{% url 'delete_ad' pk=ad.pk %}" method="post" class="inline">
+                {% csrf_token %}
+                <button type="submit" class="btn danger">Удалить</button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+    {% empty %}
+    <div class="empty">Нет объявлений</div>
+    {% endfor %}
+
+    <!-- Пагинация -->
+    {% if page_obj.has_other_pages %}
+    <div class="pagination">
+        {% if page_obj.has_previous %}
+        <a href="?page=1">&laquo; Первая</a>
+        <a href="?page={{ page_obj.previous_page_number }}">Назад</a>
+        {% endif %}
+
+        <span>Страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}</span>
+
+        {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}">Далее</a>
+        <a href="?page={{ page_obj.paginator.num_pages }}">Последняя &raquo;</a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.ad {
+    border: 1px solid #ddd;
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 5px;
+}
+.meta span {
+    margin-right: 15px;
+    color: #666;
+}
+.actions {
+    margin-top: 10px;
+}
+.btn {
+    display: inline-block;
+    padding: 8px 15px;
+    background: #007bff;
+    color: white;
+    text-decoration: none;
+    border-radius: 4px;
+    margin-right: 10px;
+}
+.btn.danger {
+    background: #dc3545;
+}
+.filter-group {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+.filter-group select,
+.filter-group input {
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+.pagination {
+    margin-top: 20px;
+    display: flex;
+    gap: 10px;
+}
+</style>
+{% endblock %}

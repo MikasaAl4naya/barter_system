@@ -1,0 +1,74 @@
+<!-- templates/ads/ad_detail.html -->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Детали объявления</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f7fc;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            width: 60%;
+            margin: 0 auto;
+            background: #fff;
+            padding: 30px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            margin-top: 50px;
+        }
+        h1 {
+            color: #333;
+        }
+        .item-details {
+            margin: 20px 0;
+        }
+        .item-details strong {
+            font-weight: bold;
+        }
+        .back-link {
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+            font-size: 14px;
+        }
+        .proposal-btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+        .proposal-btn:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>{{ ad.title }}</h1>
+        <div class="item-details">
+            <p><strong>Описание:</strong> {{ ad.description }}</p>
+            <p><strong>Категория:</strong> {{ ad.category }}</p>
+            <p><strong>Состояние:</strong> {{ ad.condition }}</p>
+            {% if ad.image_url %}
+                <img src="{{ ad.image_url }}" alt="Изображение товара" style="max-width: 300px;">
+            {% endif %}
+        </div>
+
+        <!-- Кнопка для создания предложения обмена -->
+        {% if user.is_authenticated %}
+            <a href="{% url 'create_exchange_proposal' %}?ad_sender={{ ad.id }}" class="proposal-btn">Создать предложение обмена</a>
+        {% else %}
+            <p>Чтобы создать предложение обмена, нужно <a href="{% url 'login' %}">войти</a>.</p>
+        {% endif %}
+
+        <a href="{% url 'ad_list' %}" class="back-link">Вернуться к списку</a>
+    </div>
+</body>
+</html>
