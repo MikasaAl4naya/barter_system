@@ -5,7 +5,7 @@ class Ad(models.Model):
     title = models.CharField(max_length=255)
     description = models.TextField()
     image_url = models.URLField(null=True, blank=True)
-    category = models.CharField(max_length=100)
+    category = models.CharField(max_length=100, blank=False)
     condition_choices = [
         ('new', 'Новый'),
         ('used', 'Б/у'),

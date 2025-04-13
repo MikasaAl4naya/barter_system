@@ -9,12 +9,13 @@ class AdForm(forms.ModelForm):
         fields = ['title', 'description', 'image_url', 'category', 'condition']
 
     def __init__(self, *args, **kwargs):
-        self.user = kwargs.pop('user', None)
+        self.user = kwargs.pop('user', None)  # Добавляем аргумент user
         super().__init__(*args, **kwargs)
 
     def save(self, commit=True):
         instance = super().save(commit=False)
-        instance.user = self.user
+        if self.user:
+            instance.user = self.user  # Устанавливаем пользователя из формы
         if commit:
             instance.save()
         return instance

@@ -8,7 +8,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth import login, authenticate
+from django.contrib.auth import login, authenticate, logout
 from django.core.paginator import Paginator
 from django.db.models import Q
 from django.contrib import messages
@@ -54,15 +54,12 @@ class ExchangeProposalViewSet(viewsets.ModelViewSet):
             return Response({"detail": "You do not have permission to update this proposal."}, status=status.HTTP_403_FORBIDDEN)
         return super().update(request, *args, **kwargs)
 
-
-# views.py (дополнение для ad_list)
 def ad_list(request):
     search_query = request.GET.get('search', '')
     category = request.GET.get('category', '')
     condition = request.GET.get('condition', '')
-
-    ads = Ad.objects.all()
-
+    sort_by = request.GET.get('sort', '-created_at')
+    ads = Ad.objects.all().order_by('-created_at')
     if search_query:
         ads = ads.filter(Q(title__icontains=search_query) | Q(description__icontains=search_query))
 
@@ -71,19 +68,39 @@ def ad_list(request):
 
     if condition:
         ads = ads.filter(condition=condition)
-
-    # Пагинация
+    ads = ads.order_by(sort_by)
     paginator = Paginator(ads, 10)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
-    return render(request, 'ads/ad_list.html', {
+    categories = Ad.objects.values_list('category', flat=True).distinct()
+    conditions = Ad._meta.get_field('condition').choices
+
+    # Добавляем варианты сортировки
+    sort_options = [
+        ('-created_at', 'Сначала новые'),
+        ('created_at', 'Сначала старые'),
+        ('title', 'По названию А-Я'),
+        ('-title', 'По названию Я-А'),
+    ]
+
+    context = {
         'page_obj': page_obj,
-        'categories': Ad.objects.values_list('category', flat=True).distinct(),
-        'conditions': [choice[0] for choice in Ad._meta.get_field('condition').choices]
-    })
+        'categories': categories,
+        'conditions': conditions,
+        'sort_options': sort_options,
+        # Сохраняем параметры фильтрации для формы
+        'search_query': search_query,
+        'selected_category': category,
+        'selected_condition': condition,
+        'selected_sort': sort_by,
+    }
 
+    return render(request, 'ads/ad_list.html', context)
 
+def logout_view(request):
+    logout(request)
+    return redirect('ad_list')
 @login_required
 def update_proposal(request, pk):
     proposal = get_object_or_404(ExchangeProposal, pk=pk)
@@ -102,21 +119,21 @@ def update_proposal(request, pk):
     return redirect('proposals_list')
 
 
-@login_required
 def proposals_list(request):
-    # Фильтрация предложений, только те, которые имеют статус "ожидает"
-    proposals = ExchangeProposal.objects.filter(
-        (Q(ad_sender__user=request.user) | Q(ad_receiver__user=request.user)),
-        status="ожидает"  # Только те предложения, которые еще не были приняты или отклонены
-    )
+    if not request.user.is_authenticated:
+        return redirect('login')
 
-    return render(request, 'ads/proposals_list.html', {
-        'proposals': proposals
-    })
+    proposals = ExchangeProposal.objects.filter(
+        Q(ad_sender__user=request.user) | Q(ad_receiver__user=request.user)
+    ).select_related('ad_sender', 'ad_receiver')
+
+    return render(request, 'ads/proposals_list.html', {'proposals': proposals})
+
+
 @login_required
 def create_ad(request):
     if request.method == 'POST':
-        form = AdForm(request.POST)
+        form = AdForm(request.POST, initial={'user': request.user})  # Добавьте initial
         if form.is_valid():
             ad = form.save(commit=False)
             ad.user = request.user  # Привязка объявления к текущему пользователю
@@ -126,31 +143,27 @@ def create_ad(request):
         form = AdForm()
     return render(request, 'ads/create_ad.html', {'form': form})
 
+@login_required
 def update_ad(request, pk):
     ad = get_object_or_404(Ad, pk=pk)
     if ad.user != request.user:
-        return redirect('ad_list')  # Перенаправление на список объявлений
+        return HttpResponseForbidden("У вас нет прав менять это объявление.")
     if request.method == 'POST':
-        form = AdForm(request.POST, instance=ad)
+        form = AdForm(request.POST, instance=ad, user=request.user)  # Передаем user
         if form.is_valid():
-            ad = form.save()  # Сохраняем изменения
-            return redirect('ad_detail', pk=ad.pk)  # Перенаправляем на страницу объявления
+            form.save()
+            return redirect('ad_detail', pk=ad.pk)
     else:
-        form = AdForm(instance=ad)  # Заполняем форму данными из объявления
+        form = AdForm(instance=ad, user=request.user)  # Передаем user
     return render(request, 'ads/update_ad.html', {'form': form, 'ad': ad})
-
 
 # views.py (исправление delete_ad)
 @login_required
 def delete_ad(request, pk):
     ad = get_object_or_404(Ad, pk=pk)
-
     if ad.user != request.user:
-        messages.error(request, "Вы не можете удалить это объявление")
-        return redirect('ad_list')
-
+        return HttpResponseForbidden("У вас нет прав удалить это объявление.")  # Возвращаем 403
     ad.delete()
-    messages.success(request, "Объявление успешно удалено")
     return redirect('ad_list')
 
 def ad_detail(request, pk):

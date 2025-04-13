@@ -1,120 +1,155 @@
+<!-- templates/ads/ad_list.html -->
 {% extends 'base.html' %}
-{% load static %}
 
 {% block content %}
-<div class="container">
-    <h1>Список объявлений</h1>
+<div class="container mt-3">
+    <h2>Список объявлений</h2>
 
-    <!-- Фильтры и поиск -->
-    <div class="filters">
+    <!-- Форма поиска и фильтрации -->
+    <div class="search-form">
         <form method="get">
-            <div class="filter-group">
-                <input type="text" name="search" placeholder="Поиск..." value="{{ request.GET.search }}">
+            <input type="text" name="search" placeholder="Поиск..." value="{{ search_query }}">
+            
+            <select name="category">
+                <option value="">Все категории</option>
+                {% for category in categories %}
+                    <option value="{{ category }}" {% if category == selected_category %}selected{% endif %}>
+                        {{ category }}
+                    </option>
+                {% endfor %}
+            </select>
 
-                <select name="category">
-                    <option value="">Все категории</option>
-                    {% for cat in categories %}
-                    <option value="{{ cat }}" {% if request.GET.category == cat %}selected{% endif %}>{{ cat }}</option>
-                    {% endfor %}
-                </select>
+            <select name="condition">
+                <option value="">Состояние</option>
+                {% for condition_value, condition_label in conditions %}
+                    <option value="{{ condition_value }}" 
+                            {% if condition_value == selected_condition %}selected{% endif %}>
+                        {{ condition_label }}
+                    </option>
+                {% endfor %}
+            </select>
 
-                <select name="condition">
-                    <option value="">Любое состояние</option>
-                    {% for cond in conditions %}
-                    <option value="{{ cond.0 }}" {% if request.GET.condition == cond.0 %}selected{% endif %}>{{ cond.1 }}</option>
-                    {% endfor %}
-                </select>
+            <!-- Сортировка -->
+            <select name="sort">
+                {% for sort_value, sort_label in sort_options %}
+                    <option value="{{ sort_value }}" 
+                            {% if sort_value == selected_sort %}selected{% endif %}>
+                        {{ sort_label }}
+                    </option>
+                {% endfor %}
+            </select>
 
-                <button type="submit">Применить</button>
-                <a href="{% url 'ad_list' %}" class="reset">Сбросить</a>
-            </div>
+            <button type="submit" class="btn btn-primary">Применить</button>
         </form>
     </div>
 
+    <!-- Кнопка создания объявления -->
+    {% if user.is_authenticated %}
+        <a href="{% url 'create_ad' %}" class="btn btn-success btn-lg mt-3 mb-4">
+            <i class="fas fa-plus me-2"></i>Добавить объявление
+        </a>
+    {% endif %}
+
     <!-- Список объявлений -->
-    {% for ad in page_obj %}
-    <div class="ad">
-        <h3>{{ ad.title }}</h3>
-        <p>{{ ad.description|truncatechars:100 }}</p>
-        <div class="meta">
-            <span>Категория: {{ ad.category }}</span>
-            <span>Состояние: {{ ad.get_condition_display }}</span>
-            <span>Дата: {{ ad.created_at|date:"d.m.Y" }}</span>
-        </div>
-        <div class="actions">
-            <a href="{% url 'ad_detail' pk=ad.pk %}" class="btn">Подробнее</a>
-            {% if user == ad.user %}
-            <a href="{% url 'update_ad' pk=ad.pk %}" class="btn">Редактировать</a>
-            <form action="{% url 'delete_ad' pk=ad.pk %}" method="post" class="inline">
-                {% csrf_token %}
-                <button type="submit" class="btn danger">Удалить</button>
-            </form>
-            {% endif %}
-        </div>
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+        {% for ad in page_obj %}
+            <div class="col">
+                <div class="card h-100 shadow-sm">
+                    {% if ad.image_url %}
+                        <img src="{{ ad.image_url }}" alt="Изображение" 
+                             class="card-img-top rounded-top" 
+                             style="height: 200px; object-fit: cover;">
+                    {% else %}
+                        <div class="card-img-top rounded-top" 
+                             style="height: 200px; background: #f1f1f1; display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-image fa-3x text-muted"></i>
+                        </div>
+                    {% endif %}
+                    
+                    <div class="card-body">
+                        <h5 class="card-title">{{ ad.title }}</h5>
+                        <p class="card-text">{{ ad.description }}</p>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="badge bg-primary">{{ ad.category }}</span>
+                            <span class="badge {% if ad.condition == 'new' %}bg-success{% else %}bg-warning{% endif %}">
+                                {{ ad.get_condition_display }}
+                            </span>
+                        </div>
+                        <small class="text-muted">
+                            <i class="far fa-clock me-1"></i>{{ ad.created_at|date:"d.m.Y" }}
+                        </small>
+                    </div>
+
+                    {% if request.user == ad.user %}
+                        <div class="card-footer bg-white border-top-0">
+                            <div class="d-flex justify-content-end">
+                                <a href="{% url 'ad_detail' ad.id %}" class="btn btn-primary btn-sm me-2">Подробнее</a>
+                                <a href="{% url 'update_ad' ad.id %}" class="btn btn-warning btn-sm me-2">Изменить</a>
+                                <a href="{% url 'delete_ad' ad.id %}" 
+                                   class="btn btn-danger btn-sm"
+                                   onclick="return confirm('Вы уверены?')">Удалить</a>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="card-footer bg-white border-top-0">
+                            <a href="{% url 'ad_detail' ad.id %}" class="btn btn-primary btn-sm">Подробнее</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        {% empty %}
+            <div class="col-12">
+                <div class="alert alert-info mt-3" role="alert">
+                    Ничего не найдено
+                </div>
+            </div>
+        {% endfor %}
     </div>
-    {% empty %}
-    <div class="empty">Нет объявлений</div>
-    {% endfor %}
 
     <!-- Пагинация -->
     {% if page_obj.has_other_pages %}
-    <div class="pagination">
-        {% if page_obj.has_previous %}
-        <a href="?page=1">&laquo; Первая</a>
-        <a href="?page={{ page_obj.previous_page_number }}">Назад</a>
-        {% endif %}
-
-        <span>Страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}</span>
-
-        {% if page_obj.has_next %}
-        <a href="?page={{ page_obj.next_page_number }}">Далее</a>
-        <a href="?page={{ page_obj.paginator.num_pages }}">Последняя &raquo;</a>
-        {% endif %}
-    </div>
+        <nav aria-label="Page navigation" class="d-flex justify-content-center mt-5">
+            <ul class="pagination pagination-sm">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link bg-light rounded-circle" 
+                           href="?page=1{{ query_string }}">
+                            <i class="fas fa-angle-double-left"></i>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link bg-light rounded-circle" 
+                           href="?page={{ page_obj.previous_page_number }}{{ query_string }}">
+                            <i class="fas fa-angle-left"></i>
+                        </a>
+                    </li>
+                {% endif %}
+                
+                {% for num in page_obj.paginator.page_range %}
+                    <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+                        <a class="page-link bg-light rounded-circle" 
+                           href="?page={{ num }}{{ query_string }}">
+                            {{ num }}
+                        </a>
+                    </li>
+                {% endfor %}
+                
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link bg-light rounded-circle" 
+                           href="?page={{ page_obj.next_page_number }}{{ query_string }}">
+                            <i class="fas fa-angle-right"></i>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link bg-light rounded-circle" 
+                           href="?page={{ page_obj.paginator.num_pages }}{{ query_string }}">
+                            <i class="fas fa-angle-double-right"></i>
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
     {% endif %}
 </div>
-
-<style>
-.ad {
-    border: 1px solid #ddd;
-    padding: 15px;
-    margin-bottom: 20px;
-    border-radius: 5px;
-}
-.meta span {
-    margin-right: 15px;
-    color: #666;
-}
-.actions {
-    margin-top: 10px;
-}
-.btn {
-    display: inline-block;
-    padding: 8px 15px;
-    background: #007bff;
-    color: white;
-    text-decoration: none;
-    border-radius: 4px;
-    margin-right: 10px;
-}
-.btn.danger {
-    background: #dc3545;
-}
-.filter-group {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 20px;
-}
-.filter-group select,
-.filter-group input {
-    padding: 8px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-}
-.pagination {
-    margin-top: 20px;
-    display: flex;
-    gap: 10px;
-}
-</style>
 {% endblock %}

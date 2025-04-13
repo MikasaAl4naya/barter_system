@@ -1,7 +1,6 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import *
-from django.contrib.auth.views import LogoutView
 from rest_framework import permissions
 from rest_framework.schemas import get_schema_view
 from drf_yasg.views import get_schema_view as yasg_get_schema_view
@@ -34,7 +33,8 @@ urlpatterns = [
     path('create-exchange-proposal/', create_exchange_proposal, name='create_exchange_proposal'),
     path('signup/', signup_view, name='signup'),
     path('login/', login_view, name='login'),
-    path('logout/', LogoutView.as_view(next_page='ad_list'), name='logout'),
+    path('logout/', logout_view, name='logout'),
+
     path('proposals/', proposals_list, name='proposals_list'),
     path('proposals/<int:pk>/update/', update_proposal, name='update_proposal'),
     path('api/', include(router.urls)),
